@@ -119,6 +119,29 @@ public class CCTexture2D
         this.createTexture();
     }
 
+    //Copy Constructor
+    public CCTexture2D(CCTexture2D original)
+    {
+        if(original == null) throw new NullPointerException();
+        
+        this.image = original.image.clone();
+
+        this.imageSize = new Dimension(this.image.getBufferedImage().getWidth(), this.image.getBufferedImage().getHeight());
+
+        this.width = CCMath.getPowerOfTwo(this.imageSize.width);
+        this.height = CCMath.getPowerOfTwo(this.imageSize.height);
+
+        this.widthRatio = this.imageSize.width / (float) this.width;
+        this.heightRatio = this.imageSize.height / (float) this.height;
+        this.id = -1;
+        this.createTexture();
+    }
+
+    public CCTexture2D clone()
+    {
+        return new CCTexture2D(this);
+    }
+
     protected void createTexture()
     {
         this.convertToPowerOfTwo();
@@ -369,7 +392,7 @@ public class CCTexture2D
     }
 
     /**
-     * Equals Method override //So much easier to validate with Iterator ;]
+     * Equals Method override
      * @param Object obj
      * @return bool
      */

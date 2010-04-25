@@ -37,6 +37,13 @@ public class CCTypes
         CCPixelFormatRGB5A1
     }
 
+    public enum ProjectionFormat {
+        CCDirectorProjection3D,
+        CCDirectorProjection2D        
+    }
+
+    public static float FLT_EPSILON = 1.19209290e-07f;
+
    //Color Structures
     public static class Color3B
     {
@@ -1241,6 +1248,36 @@ public class CCTypes
             {
                     return false;
             }
+        }
+    }
+
+    public static class CCGridSize
+    {
+        public int x;
+        public int y;
+        
+        public CCGridSize()
+        {
+            this(0,0);
+        }
+        
+        public CCGridSize(int x, int y)
+        {
+            this.x = x;
+            this.y = y;
+        }
+
+        public CCGridSize(CCGridSize original)
+        {
+            if(original == null) throw new NullPointerException();
+
+            this.x = original.x;
+            this.y = original.y;
+        }
+
+        public CCGridSize clone()
+        {
+            return new CCGridSize(this);
         }
     }
 

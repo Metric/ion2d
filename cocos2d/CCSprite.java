@@ -961,7 +961,7 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
 
     public CCTexture2D getTexture()
     {
-        return this.texture;
+        return this.texture.clone();
     }
 
     public void setBlendFunction(CCBlend blend)

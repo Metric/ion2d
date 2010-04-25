@@ -30,7 +30,7 @@ public class GLDisplay
 
     private boolean fullscreen;
 
-    private static final int FRAMERATE = 60;
+    private static int FRAMERATE = 60;
 
     private GLDisplay()
     {
@@ -190,5 +190,26 @@ public class GLDisplay
     public static void destroy()
     {
         Display.destroy();
+    }
+
+    //Setters
+    public static void setFrameRate(int rate)
+    {
+        FRAMERATE = rate;
+    }
+
+    //Getters
+    public static int getWidth()
+    {
+        DisplayMode mode = Display.getDisplayMode();
+
+        return mode.getWidth();
+    }
+
+    public static int getHeight()
+    {
+        DisplayMode mode = Display.getDisplayMode();
+
+        return mode.getHeight();
     }
 }

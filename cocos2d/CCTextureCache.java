@@ -265,7 +265,7 @@ public class CCTextureCache
         {
             String key = (String)textureIterator.next();
 
-            if(instance.textures.get(key).get() == null)
+            if(instance.textures.get(key) == null)
             {
                 instance.textures.remove(key);
             }

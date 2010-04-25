@@ -12,12 +12,14 @@
 
 package cocos2d;
 
-import java.awt.image.BufferedImage;
 import javax.imageio.*;
 import java.net.URL;
 import cocos2d.support.CCTypes.*;
 import java.awt.*;
 import java.io.*;
+import java.awt.image.*;
+import java.awt.color.*;
+import java.util.*;
 
 //Image holder for loading images
 public class CCImage
@@ -25,6 +27,23 @@ public class CCImage
     protected BufferedImage image;
     protected URL location;
     protected Graphics2D gd;
+
+    protected static ColorModel glAlphaColorModel;
+    protected static ColorModel glColorModel;
+
+    static {
+        glAlphaColorModel = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB),
+                                     new int[] {8,8,8,8},
+                                     true, false,
+                                     ComponentColorModel.TRANSLUCENT,
+                                     DataBuffer.TYPE_BYTE);
+        
+        glColorModel = new ComponentColorModel(ColorSpace.getInstance(ColorSpace.CS_sRGB),
+                                                new int[] {8,8,8,0},
+                                                false, false,
+                                                ComponentColorModel.OPAQUE,
+                                                DataBuffer.TYPE_BYTE);
+    }
 
     public CCImage()
     {
@@ -61,6 +80,23 @@ public class CCImage
     {
         this.image = ImageIO.read(this.location);
         this.gd = this.image.createGraphics();
+    }
+    
+    public CCImage(CCImage original)
+    {
+        if(original == null) throw new NullPointerException();
+
+        WritableRaster tempRaster = original.image.copyData(null);
+        BufferedImage tempImage = new BufferedImage(glAlphaColorModel, tempRaster, true, new Hashtable());
+
+        this.image = tempImage;
+        this.location = original.location;
+        this.gd = this.image.createGraphics();
+    }
+
+    public CCImage clone()
+    {
+        return new CCImage(this);
     }
 
     /**

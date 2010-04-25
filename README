@@ -1,0 +1,3 @@
+Note: Currently it does not compile and not all classes are implemented at this time. Some classes are fully implemented while others are only partially implemented.
+
+In the future to compile or to test individual classes you need the LWJGL (Lightweight Java Game Library). LWJGL handles all the OpenGL wrapping. You can grab a copy at: http://lwjgl.org/
