@@ -45,7 +45,7 @@ public class CCSpriteFrame
     {
         if(original == null) throw new NullPointerException();
         
-        this.texture = original.texture.clone();
+        this.texture = original.texture;
         this.rect = (Rectangle)original.rect.clone();
         this.offset = (Point2D)offset.clone();
         this.originalSize = (Dimension)original.originalSize.clone();
@@ -76,7 +76,7 @@ public class CCSpriteFrame
 
     public CCTexture2D getTexture()
     {
-        return this.texture.clone();
+        return this.texture;
     }
 
     /**

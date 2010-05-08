@@ -14,7 +14,6 @@ package cocos2d;
 
 import cocos2d.support.CCTypes.*;
 import java.awt.*;
-import java.awt.geom.*;
 import org.lwjgl.opengl.*;
 
 public abstract class CCGridBase
@@ -75,9 +74,9 @@ public abstract class CCGridBase
         this.blit();
     }
 
-    protected abstract void blit();
+    public abstract void blit();
 
-    protected abstract void reuse();
+    public abstract void reuse();
 
     //Setters
     public void setActive(boolean active)
@@ -119,5 +118,10 @@ public abstract class CCGridBase
     public CCGrabber getGrabber()
     {
         return this.grabber.clone();
+    }
+
+    public void setReuse(int times)
+    {
+        this.reuseGrid = times;
     }
 }

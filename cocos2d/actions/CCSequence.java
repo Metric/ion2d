@@ -37,12 +37,15 @@ public class CCSequence extends CCIntervalAction
 
         this.sequence.add(action1);
 
-        for(int i = 0; i < multipleActions.length; i++)
+        if(multipleActions != null)
         {
-            if(multipleActions[i] != null)
+            for(int i = 0; i < multipleActions.length; i++)
             {
-                totalDuration += multipleActions[i].getDuration();
-                this.sequence.add(multipleActions[i]);
+                if(multipleActions[i] != null)
+                {
+                    totalDuration += multipleActions[i].getDuration();
+                    this.sequence.add(multipleActions[i]);
+                }
             }
         }
 

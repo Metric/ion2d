@@ -32,54 +32,60 @@ public class CCScheduler
         this.timeScale = 1.0f;
     }
 
-    public static CCScheduler getInstance()
+    protected static void checkInstance()
     {
         if(instance == null)
         {
             instance = new CCScheduler();
         }
-
-        return instance;
     }
 
-    public void setTimeScale(float scale) { this.timeScale = scale; }
+    public static void setTimeScale(float scale)
+    {
+        checkInstance();
+        instance.timeScale = scale;
+    }
 
     /**
      * Removes all currently scheduled timers
      */
-    public void unscheduleAllTimers()
+    public static void unscheduleAllTimers()
     {
-        this.schedule.clear();
-        this.scheduleToAdd.clear();
-        this.scheduleToRemove.clear();
+        checkInstance();
+
+        instance.schedule.clear();
+        instance.scheduleToAdd.clear();
+        instance.scheduleToRemove.clear();
     }
 
     /**
      * Performs all the tick operations on the timers
-     * @param timeTick
+     * @param float timeTick
      */
-    public void tick(float timeTick)
+    public static void tick(float timeTick)
     {
-        if(this.timeScale != 1.0f)
+        checkInstance();
+
+        if(instance.timeScale != 1.0f)
         {
-            timeTick *= this.timeScale;
+            timeTick *= instance.timeScale;
         }
 
-        for(CCTimer removeTimer : this.scheduleToRemove)
+        for(CCTimer removeTimer : instance.scheduleToRemove)
         {
-            this.schedule.remove(removeTimer);
+            instance.schedule.remove(removeTimer);
         }
 
-        this.scheduleToRemove.clear();
+        instance.scheduleToRemove.clear();
 
-        for(CCTimer addTimer : this.scheduleToAdd)
+        for(CCTimer addTimer : instance.scheduleToAdd)
         {
-            this.schedule.add(addTimer);
+            instance.schedule.add(addTimer);
         }
 
-        this.scheduleToAdd.clear();
+        instance.scheduleToAdd.clear();
 
-        for(CCTimer scheduledTimer : this.schedule)
+        for(CCTimer scheduledTimer : instance.schedule)
         {
             scheduledTimer.fire(timeTick);
         }
@@ -89,33 +95,38 @@ public class CCScheduler
      * Adds a timer to the scheduler
      * @param CCTimer timer
      */
-    public void scheduleTimer(CCTimer timer)
+    public static void scheduleTimer(CCTimer timer)
     {
-        if(this.scheduleToRemove.contains(timer))
+        checkInstance();
+
+        if(instance.scheduleToRemove.contains(timer))
         {
-            this.scheduleToRemove.remove(timer);
+            instance.scheduleToRemove.remove(timer);
         }
 
-        if(!this.schedule.contains(timer) && !this.scheduleToAdd.contains(timer))
+        if(!instance.schedule.contains(timer) && !instance.scheduleToAdd.contains(timer))
         {
-            this.scheduleToAdd.add(timer);
+            instance.scheduleToAdd.add(timer);
         }
     }
 
     /**
      * Unschedules a timer from the scheduler
+     * @param CCTimer timer
      */
-    public void unscheduleTimer(CCTimer timer)
+    public static void unscheduleTimer(CCTimer timer)
     {
-        if(this.scheduleToAdd.contains(timer))
+        checkInstance();
+
+        if(instance.scheduleToAdd.contains(timer))
         {
-            this.scheduleToAdd.remove(timer);
+            instance.scheduleToAdd.remove(timer);
             return;
         }
 
-        if(this.schedule.contains(timer))
+        if(instance.schedule.contains(timer))
         {
-            this.scheduleToRemove.add(timer);
+            instance.scheduleToRemove.add(timer);
         }
     }
 }

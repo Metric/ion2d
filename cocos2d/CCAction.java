@@ -73,4 +73,14 @@ public class CCAction
     {
         return true;
     }
+
+    public int getTag()
+    {
+        return this.tag;
+    }
+
+    public CCSelector getTarget()
+    {
+        return this.selector;
+    }
 }

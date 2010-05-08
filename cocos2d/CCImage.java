@@ -27,6 +27,7 @@ public class CCImage
     protected BufferedImage image;
     protected URL location;
     protected Graphics2D gd;
+    protected String name;
 
     protected static ColorModel glAlphaColorModel;
     protected static ColorModel glColorModel;
@@ -52,12 +53,14 @@ public class CCImage
 
     public CCImage(File file) throws IOException
     {
+        this.name = file.getName();
         this.image = ImageIO.read(file);
         this.gd = this.image.createGraphics();
     }
     
     public CCImage(BufferedImage image)
     {
+        this.name = image.toString();
         this.image = image;
         this.gd = this.image.createGraphics();
     }
@@ -65,12 +68,14 @@ public class CCImage
     public CCImage(int width, int height)
     {
         this.image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        this.name = this.image.toString();
         this.location = null;
         this.gd = this.image.createGraphics();
     }
 
     public CCImage(String file) throws IOException
     {
+        this.name = file;
         this.location = new URL(file);
         this.image = ImageIO.read(this.location);
         this.gd = this.image.createGraphics();
@@ -78,6 +83,7 @@ public class CCImage
 
     public CCImage(URL link) throws IOException
     {
+        this.name = link.toString();
         this.image = ImageIO.read(this.location);
         this.gd = this.image.createGraphics();
     }
@@ -89,6 +95,7 @@ public class CCImage
         WritableRaster tempRaster = original.image.copyData(null);
         BufferedImage tempImage = new BufferedImage(glAlphaColorModel, tempRaster, true, new Hashtable());
 
+        this.name = original.name;
         this.image = tempImage;
         this.location = original.location;
         this.gd = this.image.createGraphics();
@@ -179,5 +186,10 @@ public class CCImage
     public BufferedImage getBufferedImage()
     {
         return this.image;
+    }
+
+    public String getName()
+    {
+        return this.name;
     }
 }

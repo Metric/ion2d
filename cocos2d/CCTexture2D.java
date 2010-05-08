@@ -309,7 +309,7 @@ public class CCTexture2D
         this.bind();
         GL11.glVertexPointer(3, 0, verticeBuffer);
         GL11.glTexCoordPointer(2, 0, coordinatesBuffer);
-        GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
+        GL11.glDrawArrays(GL11.GL_QUADS, 0, 4);
     }
 
     /**
@@ -343,7 +343,7 @@ public class CCTexture2D
         this.bind();
         GL11.glVertexPointer(3, 0, verticeBuffer);
         GL11.glTexCoordPointer(2, 0, coordinatesBuffer);
-        GL11.glDrawArrays(GL11.GL_TRIANGLE_STRIP, 0, 4);
+        GL11.glDrawArrays(GL11.GL_QUADS, 0, 4);
     }
 
     /**

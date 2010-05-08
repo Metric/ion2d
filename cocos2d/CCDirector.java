@@ -13,18 +13,15 @@
 package cocos2d;
 
 import cocos2d.support.GLDisplay;
-import javax.media.opengl.GL;
-import javax.media.opengl.GLAutoDrawable;
-import javax.media.opengl.GLEventListener;
-import javax.media.opengl.glu.GLU;
 import cocos2d.support.*;
 import cocos2d.support.CCTypes.*;
 import java.util.Vector;
+import java.awt.*;
 
 /**
  * The Director Singleton
  */
-public class CCDirector implements GLEventListener
+public class CCDirector
 {
     private GLDisplay glDisplay;
     
@@ -64,13 +61,20 @@ public class CCDirector implements GLEventListener
 
     }
 
-    public CCDirector getInstance()
+    public static void checkInstance()
     {
         if(instance == null)
         {
             instance = new CCDirector();
         }
+    }
 
-        return instance;
+    public static Dimension getScreenSize()
+    {
+        checkInstance();
+
+        Dimension screen = new Dimension(GLDisplay.getWidth(), GLDisplay.getHeight());
+
+        return screen;
     }
 }

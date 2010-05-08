@@ -49,7 +49,8 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     protected boolean flipX;
     protected boolean flipY;
 
-    protected Hashtable animations;
+    protected Hashtable<String, CCAnimation> animations;
+    protected CCSpriteFrame currentFrame;
 
     public CCSprite() throws Exception
     {
@@ -81,7 +82,19 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
 
     public CCSprite(CCTexture2D tex) throws Exception
     {
-        this(tex, new Rectangle(0,0,0,0));
+        this(tex, new Rectangle(0,0,tex.getImageSize().width,tex.getImageSize().height));
+    }
+
+    public CCSprite(CCSpriteFrame spriteFrame) throws Exception
+    {
+        this(spriteFrame.getTexture(), spriteFrame.getRect());
+        this.setDisplayFrame(spriteFrame);
+    }
+
+    public CCSprite(CCSpriteSheet sheet, Rectangle rect) throws Exception
+    {
+        this(sheet.getTexture(), rect);
+        this.setUseSpriteSheet(sheet);
     }
 
     public CCSprite(CCTexture2D tex, Rectangle rect) throws Exception
@@ -512,7 +525,7 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
                 return;
             }
 
-            if(this.parent == null || this.parent == this.spriteSheet)
+            if(this.parent == null || this.parent.equals(this.spriteSheet))
             {
                 float radians = (float)CCMath.degreesToRadians(this.rotation);
                 float c = (float)Math.cos(radians);
@@ -601,8 +614,18 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
 
     public void draw()
     {
+        //If the sprite is using a sprite sheet then do not draw via
+        //The sprite and let the sprite sheet handle the drawing  instead
         if(this.useSpriteSheet) return;
-        
+
+        //This is pretty obvious, if the sprite isn't visible then
+        //Do not draw the sprite!
+        if(!this.visible) return;
+
+        //If the sprites quad is off the screen there is no point in
+        //Drawing the sprite
+        if(this.isQuadOffScreen(this.quad)) return;
+
         boolean newBlend = false;
         
         if(this.blend.source != GL11.GL_SRC_ALPHA || this.blend.destination != GL11.GL_ONE_MINUS_SRC_ALPHA )
@@ -638,17 +661,17 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     {
         FloatBuffer coordBuffer = FloatBuffer.allocate(2*4);
         
+        coordBuffer.put(this.quad.bl.coords.x);
+        coordBuffer.put(this.quad.bl.coords.y);
+        
+        coordBuffer.put(this.quad.br.coords.x);
+        coordBuffer.put(this.quad.br.coords.y);
+        
         coordBuffer.put(this.quad.tl.coords.x);
         coordBuffer.put(this.quad.tl.coords.y);
         
         coordBuffer.put(this.quad.tr.coords.x);
         coordBuffer.put(this.quad.tr.coords.y);
-        
-        coordBuffer.put(this.quad.br.coords.x);
-        coordBuffer.put(this.quad.br.coords.y);
-        
-        coordBuffer.put(this.quad.bl.coords.x);
-        coordBuffer.put(this.quad.bl.coords.y);
 
         return coordBuffer;
     }
@@ -661,6 +684,16 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     {
         FloatBuffer colorBuffer = FloatBuffer.allocate(4*4);
         
+        colorBuffer.put(this.quad.bl.color.getRed());
+        colorBuffer.put(this.quad.bl.color.getGreen());
+        colorBuffer.put(this.quad.bl.color.getBlue());
+        colorBuffer.put(this.quad.bl.color.getAlpha());
+        
+        colorBuffer.put(this.quad.br.color.getRed());
+        colorBuffer.put(this.quad.br.color.getGreen());
+        colorBuffer.put(this.quad.br.color.getBlue());
+        colorBuffer.put(this.quad.br.color.getAlpha());
+        
         colorBuffer.put(this.quad.tl.color.getRed());
         colorBuffer.put(this.quad.tl.color.getGreen());
         colorBuffer.put(this.quad.tl.color.getBlue());
@@ -670,16 +703,6 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
         colorBuffer.put(this.quad.tr.color.getGreen());
         colorBuffer.put(this.quad.tr.color.getBlue());
         colorBuffer.put(this.quad.tr.color.getAlpha());
-        
-        colorBuffer.put(this.quad.br.color.getRed());
-        colorBuffer.put(this.quad.br.color.getGreen());
-        colorBuffer.put(this.quad.br.color.getBlue());
-        colorBuffer.put(this.quad.br.color.getAlpha());
-        
-        colorBuffer.put(this.quad.bl.color.getRed());
-        colorBuffer.put(this.quad.bl.color.getGreen());
-        colorBuffer.put(this.quad.bl.color.getBlue());
-        colorBuffer.put(this.quad.bl.color.getAlpha());
 
         return colorBuffer;
     }
@@ -692,6 +715,14 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     {
         FloatBuffer vertexBuffer = FloatBuffer.allocate(3 * 4);
         
+        vertexBuffer.put(this.quad.bl.vertice.x);
+        vertexBuffer.put(this.quad.bl.vertice.y);
+        vertexBuffer.put(this.quad.bl.vertice.z);
+        
+        vertexBuffer.put(this.quad.br.vertice.x);
+        vertexBuffer.put(this.quad.br.vertice.y);
+        vertexBuffer.put(this.quad.br.vertice.z);
+        
         vertexBuffer.put(this.quad.tl.vertice.x);
         vertexBuffer.put(this.quad.tl.vertice.y);
         vertexBuffer.put(this.quad.tl.vertice.z);
@@ -700,30 +731,76 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
         vertexBuffer.put(this.quad.tr.vertice.y);
         vertexBuffer.put(this.quad.tr.vertice.z);
         
-        vertexBuffer.put(this.quad.br.vertice.x);
-        vertexBuffer.put(this.quad.br.vertice.y);
-        vertexBuffer.put(this.quad.br.vertice.z);
-        
-        vertexBuffer.put(this.quad.bl.vertice.x);
-        vertexBuffer.put(this.quad.bl.vertice.y);
-        vertexBuffer.put(this.quad.bl.vertice.z);
-        
         return vertexBuffer;
     }
 
     /**
-     * CCSprite addChild Override
+     * addChild override
+     * @param CCNode node
+     * @return CCNode
+     * @throws Exception
      */
-    public CCNode addChild(CCSprite child, int z, int tag) throws Exception
+    public CCNode addChild(CCNode node) throws Exception
     {
-        CCNode returnNode = super.addChild(child, z, tag);
+        CCNode returnNode = super.addChild(node);
         
         if(this.useSpriteSheet)
         {
-            if(this.getClass() != child.getClass()) throw new Exception("CCSprite only supports CCSprites as children when using SpriteSheet");
-            if(this.textures.texture.getId() != child.texture.getId()) throw new Exception("CCSprite is not using the same texture id");
+            if(this.getClass() != node.getClass()) throw new Exception("CCSprite only supports CCSprites as children when using SpriteSheet");
+            CCSprite sprite = (CCSprite)node;
 
-            this.spriteSheet.add(child);
+            if(this.textures.texture.getId() != sprite.texture.getId()) throw new Exception("CCSprite is not using the same texture id");
+
+            this.spriteSheet.addChild(node);
+        }
+
+        this.hasChildren = true;
+        return returnNode;
+    }
+
+    /**
+     * addChild override
+     * @param CCNode node
+     * @param int z
+     * @return CCNode
+     */
+    public CCNode addChild(CCNode node, int z) throws Exception
+    {
+         CCNode returnNode = super.addChild(node, z);
+        
+        if(this.useSpriteSheet)
+        {
+            if(this.getClass() != node.getClass()) throw new Exception("CCSprite only supports CCSprites as children when using SpriteSheet");
+            CCSprite sprite = (CCSprite)node;
+
+            if(this.textures.texture.getId() != sprite.texture.getId()) throw new Exception("CCSprite is not using the same texture id");
+
+            this.spriteSheet.addChild(node, z);
+        }
+
+        this.hasChildren = true;
+        return returnNode;       
+    }
+
+    /**
+     * CCSprite addChild Override
+     * @param CCNode node
+     * @param int z
+     * @param int tag
+     * @return CCNode
+     */
+    public CCNode addChild(CCNode node, int z, int tag) throws Exception
+    {
+        CCNode returnNode = super.addChild(node, z, tag);
+        
+        if(this.useSpriteSheet)
+        {
+            if(this.getClass() != node.getClass()) throw new Exception("CCSprite only supports CCSprites as children when using SpriteSheet");
+            CCSprite sprite = (CCSprite)node;
+
+            if(this.textures.texture.getId() != sprite.texture.getId()) throw new Exception("CCSprite is not using the same texture id");
+
+            this.spriteSheet.addChild(node, z, tag);
         }
 
         this.hasChildren = true;
@@ -734,9 +811,27 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     public void removeChild(CCSprite sprite, boolean cleanup)
     {
         if(this.useSpriteSheet)
-            this.spriteSheet.removeSpriteFromAtlas(sprite);
+            this.spriteSheet.removeChild(sprite, cleanup);
         
         super.removeChild(sprite, cleanup);
+        
+        if(this.children.size() > 0) 
+            this.hasChildren = true;
+        else
+            this.hasChildren = false;
+    }
+
+    /**
+     * Removes a child by the specified tag
+     * @param int tag
+     * @param boolean cleanup
+     */
+    public void removeChildByTag(int tag, boolean cleanup)
+    {
+        CCSprite sprite = (CCSprite)this.getChildByTag(tag);
+        
+        if(this.useSpriteSheet)
+           this.spriteSheet.removeChild(sprite, cleanup);
         
         if(this.children.size() > 0) 
             this.hasChildren = true;
@@ -748,10 +843,7 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     {
         if(this.useSpriteSheet)
         {
-            for(CCNode child : this.children)
-            {
-                this.spriteSheet.removeSpriteFromAtlas((CCSprite)child);
-            }
+            this.spriteSheet.removeAllChildrenWithCleanup(cleanup);
         }
         
         super.removeAllChildrenWithCleanup(cleanup);
@@ -863,6 +955,93 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     }
 
     /**
+     * Sets the display frame of the CCSpriteFrame
+     * @param CCSpriteFrame frame
+     * @throws Exception
+     */
+    public void setDisplayFrame(CCSpriteFrame frame) throws Exception
+    {
+        this.currentFrame = frame;
+        this.offsetPosition = new Vertex2F(frame.getOffset());
+        Rectangle frameRect = frame.getRect();
+        Dimension frameSize = frame.getOriginalSize();
+        
+        this.offsetPosition.x += (frameSize.width - frameRect.width) / 2;
+        this.offsetPosition.y += (frameSize.height - frameRect.height) / 2;
+        
+        if(frame.texture.getId() != this.texture.getId())
+        {
+            this.setTexture(frame.getTexture());
+        }
+
+        this.setTextureRect(frameRect, frameSize);
+    }
+
+    /**
+     * Sets the display frame by the animation name and index
+     * @param String animationName
+     * @param int index
+     * @throws Exception
+     */
+    public void setDisplayFrame(String animationName, int index) throws Exception
+    {
+        if(this.animations == null)
+            this.initAnimations();
+
+        CCAnimation anim = this.animations.get(animationName);
+        CCSpriteFrame frame = anim.getFrames().get(index);
+
+        if(frame == null) throw new Exception("CCSprite.setDisplayFrame - Invalid Frame");
+        this.setDisplayFrame(frame);
+    }
+
+    /**
+     * Checks to see if the specified frame is displayed
+     * @param CCSpriteFrame frame
+     * @return boolean
+     */
+    public boolean isFrameDisplayed(CCSpriteFrame frame)
+    {
+        return this.currentFrame.equals(frame);
+    }
+
+    /**
+     * Gets the currently displayed frame
+     * @return CCSpriteFrame
+     */
+    public CCSpriteFrame getCurrentFrame()
+    {
+        return this.currentFrame;
+    }
+
+    /**
+     * Adds an animation to the sprite
+     * @param anim
+     */
+    public void addAnimation(CCAnimation anim)
+    {
+        if(this.animations == null)
+            this.initAnimations();
+        
+        this.animations.put(anim.getName(), anim);
+    }
+
+    /**
+     * Gets the animation by name
+     * @param String name
+     * @return CCAnimation
+     */
+    public CCAnimation getAnimation(String name)
+    {
+        return this.animations.get(name);
+    }
+
+    private void initAnimations()
+    {
+        this.animations = new Hashtable<String, CCAnimation>(2,2);
+    }
+
+    /**
      * RGBA Protocol
      * @return
      */
@@ -902,12 +1081,22 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     public Color3B getColor() { if(this.opacityModifiesRGB) return this.colorUnmodified.clone(); else return this.color.clone(); }
 
     public boolean usesSpriteSheet() { return this.useSpriteSheet; }
-    public void setUseSpriteSheet(boolean use) { this.useSpriteSheet = use; }
+    protected void setUseSpriteSheet(CCSpriteSheet sheet)
+    {
+        this.useSpriteSheet = true;
+        this.spriteSheet = sheet;
+        this.textures = this.spriteSheet.getTextureAtlas();
+    }
 
     public HonorParentTransform honorsParentTransform() { return this.honorTransform; }
     public void setHonorParentTransform(HonorParentTransform transform)
     {
         this.honorTransform = transform;
+    }
+
+    public void setAtlasIndex(int index)
+    {
+        this.index = index;
     }
 
     public boolean doesOpacityModifyRGB()
@@ -961,7 +1150,7 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
 
     public CCTexture2D getTexture()
     {
-        return this.texture.clone();
+        return this.texture;
     }
 
     public void setBlendFunction(CCBlend blend)
@@ -972,5 +1161,116 @@ public class CCSprite extends CCNode implements CCRGBAProtocol, CCTextureProtoco
     public CCBlend getBlendFunction()
     {
         return this.blend.clone();
+    }
+
+    /**
+     * Equals Method override
+     * @param Object obj
+     * @return bool
+     */
+    public boolean equals ( Object obj )
+    {
+        if ( this == obj ) return true;
+
+        if ((obj != null) && (getClass() == obj.getClass()))
+        {
+                CCSprite sprite = (CCSprite) obj;
+
+                if(this.rotation != sprite.rotation || this.scaleX != sprite.scaleX
+                   || this.scaleY != sprite.scaleY || !this.position.equals(sprite.position)
+                   || this.visible != sprite.visible || !this.anchorPointInPixel.equals(sprite.anchorPointInPixel)
+                   || !this.anchorPoint.equals(sprite.anchorPoint) || this.isRelativeAnchorePoint != sprite.isRelativeAnchorePoint
+                   || !this.contentSize.equals(sprite.contentSize) || !this.transform.equals(sprite.transform)
+                   || this.vertexZ != sprite.vertexZ || this.zOrder != sprite.zOrder || this.tag != sprite.tag
+                   || !this.userData.equals(sprite.userData) || this.isRunning != sprite.isRunning
+                   || this.isTransformDirty != sprite.isTransformDirty || this.isInverseDirty != sprite.isInverseDirty
+                   || !this.offsetPosition.equals(sprite.offsetPosition)
+                   || this.index != sprite.index || !this.spriteSheet.equals(sprite.spriteSheet)
+                   || this.dirty != sprite.dirty || this.recursiveDirty != sprite.recursiveDirty
+                   || this.hasChildren != sprite.hasChildren || !this.blend.equals(sprite.blend)
+                   || !this.texture.equals(sprite.texture) || this.useSpriteSheet != sprite.useSpriteSheet
+                   || !this.rect.equals(sprite.rect) || !this.honorTransform.equals(sprite.honorTransform)
+                   || !this.quad.equals(sprite.quad) || this.opacity != sprite.opacity
+                   || !this.colorUnmodified.equals(sprite.colorUnmodified) || !this.color.equals(sprite.color)
+                   || this.opacityModifiesRGB != sprite.opacityModifiesRGB || this.flipX != sprite.flipX
+                   || this.flipY != sprite.flipY || !this.animations.equals(sprite.animations))
+                {
+                    return false;
+                }
+
+                return true;
+        }
+        else
+        {
+                return false;
+        }
+    }
+
+    protected boolean isQuadOffScreen(QuadTexture3F quad)
+    {
+        Dimension screen = CCDirector.getScreenSize();
+
+        //We need to take into account any rotation transforms
+        //Technically bl and tl could be greater than tr and br
+        //Because of a rotation and the quad could technically still be on the screen
+        if(quad.bl.vertice.x < quad.br.vertice.x || quad.tl.vertice.x  < quad.tr.vertice.x)
+        {
+            if(quad.bl.vertice.y < quad.tl.vertice.y || quad.br.vertice.y < quad.tr.vertice.y)
+            {
+                if((quad.bl.vertice.x > screen.width && quad.tl.vertice.x > screen.width)
+                      || (quad.bl.vertice.y > screen.height && quad.br.vertice.y > screen.height)
+                      || (quad.tr.vertice.y < 0 && quad.tl.vertice.y < 0)
+                      || (quad.tr.vertice.x < 0 && quad.br.vertice.x < 0))
+                {
+                    return true;
+                }
+            }
+            else if(quad.bl.vertice.y > quad.tl.vertice.y || quad.br.vertice.y > quad.tr.vertice.y)
+            {
+                if((quad.bl.vertice.x > screen.width && quad.tl.vertice.x > screen.width)
+                   || (quad.tl.vertice.y > screen.height && quad.tr.vertice.y > screen.height)
+                   || (quad.bl.vertice.y < 0 && quad.br.vertice.y < 0)
+                   || (quad.tr.vertice.x < 0 && quad.br.vertice.x < 0))
+                {
+                    return true;
+                }
+            }
+        }
+        else if(quad.bl.vertice.x > quad.br.vertice.x || quad.tl.vertice.x > quad.tr.vertice.x)
+        {
+            if(quad.bl.vertice.y < quad.tl.vertice.y || quad.br.vertice.y < quad.tr.vertice.y)
+            {
+                if((quad.tr.vertice.x > screen.width && quad.br.vertice.x > screen.width)
+                      || (quad.bl.vertice.y > screen.height && quad.br.vertice.y > screen.height)
+                      || (quad.tr.vertice.y < 0 && quad.tl.vertice.y < 0)
+                      || (quad.tl.vertice.x < 0 && quad.bl.vertice.x < 0))
+                {
+                    return true;
+                }
+            }
+            else if(quad.bl.vertice.y > quad.tl.vertice.y || quad.br.vertice.y > quad.tr.vertice.y)
+            {
+                if((quad.tr.vertice.x > screen.width && quad.br.vertice.x > screen.width)
+                   || (quad.tl.vertice.y > screen.height && quad.tr.vertice.y > screen.height)
+                   || (quad.bl.vertice.y < 0 && quad.br.vertice.y < 0)
+                   || (quad.tl.vertice.x < 0 && quad.bl.vertice.x < 0))
+                {
+                    return true;
+                }
+            }
+        }
+
+        //There is one more else if we need to check for and that is if all the points
+        //Have been collapsed onto each other, even though this is technically not offscreen
+        //It can still save memory by not trying to draw the collapsed quad.
+        else if(quad.bl.vertice.x == 0 && quad.bl.vertice.y == 0 && quad.bl.vertice.z == 0
+                && quad.br.vertice.x == 0 && quad.br.vertice.y == 0 && quad.br.vertice.z == 0
+                && quad.tl.vertice.x == 0 && quad.tl.vertice.y == 0 && quad.tl.vertice.z == 0
+                && quad.tr.vertice.x == 0 && quad.tr.vertice.y == 0 && quad.tr.vertice.z == 0)
+        {
+            return true;
+        }
+
+       return false;
     }
 }

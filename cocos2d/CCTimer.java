@@ -26,6 +26,11 @@ public class CCTimer
         this(null, 0);
     }
 
+    public CCTimer(CCSelector selector)
+    {
+        this(selector, CCTypes.FLT_EPSILON);
+    }
+
     public CCTimer(CCSelector selector, float interval)
     {
         if(selector == null) throw new NullPointerException();
@@ -51,7 +56,7 @@ public class CCTimer
 
     /**
      * Call this to updated the elapsed time
-     * @param CCTime time
+     * @param float time
      */
     public void fire(float time)
     {

@@ -42,6 +42,9 @@ public class CCNode implements Comparator<CCNode> {
 
     protected int zOrder;
 
+    protected CCCamera camera;
+    protected CCGridBase grid;
+
     protected Vector<CCNode> children;
     protected CCNode parent;
 
@@ -101,9 +104,10 @@ public class CCNode implements Comparator<CCNode> {
      * Add a child to the node. Returns itself to allow for chaining
      * @param CCNode node
      */
-    public CCNode addChild(CCNode node)
+    public CCNode addChild(CCNode node) throws Exception
     {
-        node.parent = this;
+        if(node.parent == null) node.parent = this;
+
         this.children.add(node);
 
         Collections.sort(this.children, this);
@@ -117,14 +121,24 @@ public class CCNode implements Comparator<CCNode> {
     }
 
     /**
+     * Returns the current index of the child in the Vector
+     * @param CCNode child
+     * @return in
+     */
+    public int getIndexForChild(CCNode child)
+    {
+        return this.children.indexOf(child);
+    }
+
+    /**
      * Adds a child to the node and sets the z order of the child
      * @param CCNode node
      * @param int z
      * @return CCNode
      */
-    public CCNode addChild(CCNode node, int z)
+    public CCNode addChild(CCNode node, int z) throws Exception
     {
-        node.parent = this;
+        if(node.parent == null) node.parent = this;
         node.setZOrder(z);
         this.children.add(node);
 
@@ -145,11 +159,11 @@ public class CCNode implements Comparator<CCNode> {
      * @param int tag
      * @return CCNode
      */
-    public CCNode addChild(CCNode node, int z, int tag)
+    public CCNode addChild(CCNode node, int z, int tag) throws Exception
     {
         node.setZOrder(z);
         node.setTag(tag);
-        node.parent = this;
+        if(node.parent == null) node.parent = this;
 
         this.children.add(node);
         Collections.sort(this.children, this);
@@ -274,6 +288,12 @@ public class CCNode implements Comparator<CCNode> {
 
         GL11.glPushMatrix();
 
+        if(this.grid != null && this.grid.getActive())
+        {
+            this.grid.beforeDraw();
+            this.transformAncestors();
+        }
+
         this.transform();
 
         for(CCNode node : this.children)
@@ -290,6 +310,11 @@ public class CCNode implements Comparator<CCNode> {
         {
             if(node.zOrder >= 0)
                 node.visit();
+        }
+
+        if(this.grid != null && this.grid.getActive())
+        {
+            this.grid.afterDraw(this);
         }
 
         GL11.glPopMatrix();
@@ -319,15 +344,22 @@ public class CCNode implements Comparator<CCNode> {
            GL11.glTranslatef(0, 0, this.vertexZ);
        }
 
-       //Insert if for camera / grid.active
-       boolean translate = (this.anchorPointInPixel.x != 0.0f || this.anchorPointInPixel.y != 0.0f);
-
-       if(translate)
+       if(this.camera != null && !(this.grid != null && this.grid.getActive()))
        {
-            GL11.glTranslatef(this.anchorPointInPixel.x, this.anchorPointInPixel.y, 0);
-       }
+           boolean translate = (this.anchorPointInPixel.x != 0.0f || this.anchorPointInPixel.y != 0.0f);
 
-       //Insert Camera Code
+           if(translate)
+           {
+                GL11.glTranslatef(this.anchorPointInPixel.x, this.anchorPointInPixel.y, 0);
+           }
+
+           this.camera.locate();
+
+           if(translate)
+           {
+               GL11.glTranslatef(-this.anchorPointInPixel.x, -this.anchorPointInPixel.y, 0);
+           }
+       }
     }
 
     /**
@@ -477,6 +509,15 @@ public class CCNode implements Comparator<CCNode> {
     }
 
     //Getters and Setters
+
+    public CCCamera getCamera()
+    {
+        if(this.camera == null)
+            this.camera = new CCCamera();
+
+        return this.camera;
+    }
+
     public int getZOrder() { return this.zOrder; }
     public float getVertexZ() { return this.vertexZ; }
     public float getRotation() { return this.rotation; }
@@ -508,6 +549,14 @@ public class CCNode implements Comparator<CCNode> {
         {
             Collections.sort(this.parent.children, this.parent);
         }
+
+        //Check to see if the parent is a sprite sheet and if so
+        //Reorder the sprite sheet Atlas
+        if(this.parent.getClass() == CCSpriteSheet.class)
+        {
+            CCSpriteSheet sheet = (CCSpriteSheet)this.parent;
+            sheet.reorderAtlas();
+        }
     }
     public void setVertexZ(float z) { this.vertexZ = z; }
     public void setRotation(float rotation) { this.rotation = rotation; this.isTransformDirty = this.isInverseDirty = true; }
@@ -518,6 +567,11 @@ public class CCNode implements Comparator<CCNode> {
     {
         this.isRelativeAnchorePoint = relative;
         this.isTransformDirty = this.isInverseDirty = true;
+    }
+
+    public void setGrid(CCGridBase grid)
+    {
+        this.grid = grid;
     }
 
     public void setData(Object data) { this.userData = data; }
@@ -715,5 +769,39 @@ public class CCNode implements Comparator<CCNode> {
     {
         point = this.convertToWorldSpace(point);
         return CCDirector.convertToUI(point);
+    }
+
+    /**
+     * Equals Method override
+     * @param Object obj
+     * @return bool
+     */
+    public boolean equals ( Object obj )
+    {
+        if ( this == obj ) return true;
+
+        if ((obj != null) && (getClass() == obj.getClass()))
+        {
+                CCNode node = (CCNode) obj;
+
+                if(this.rotation != node.rotation || this.scaleX != node.scaleX
+                   || this.scaleY != node.scaleY || !this.position.equals(node.position)
+                   || this.visible != node.visible || !this.anchorPointInPixel.equals(node.anchorPointInPixel)
+                   || !this.anchorPoint.equals(node.anchorPoint) || this.isRelativeAnchorePoint != node.isRelativeAnchorePoint
+                   || !this.contentSize.equals(node.contentSize) || !this.transform.equals(node.transform)
+                   || this.vertexZ != node.vertexZ || this.zOrder != node.zOrder || this.tag != node.tag
+                   || !this.userData.equals(node.userData) || this.isRunning != node.isRunning
+                   || this.isTransformDirty != node.isTransformDirty || this.isInverseDirty != node.isInverseDirty
+                   || !this.offsetPosition.equals(node.offsetPosition))
+                {
+                    return false;
+                }
+
+                return true;
+        }
+        else
+        {
+                return false;
+        }
     }
 }
