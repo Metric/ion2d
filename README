@@ -1,3 +1,6 @@
-Note: Currently it does not compile and not all classes are implemented at this time. Some classes are fully implemented while others are only partially implemented.
+Note: This version does compile. Most things have been implemented in it, but still needs heavy testing! I am not currently actively developing this version right now, but maybe in the future. Feel free to fork it and run with it.
 
-In the future to compile or to test individual classes you need the LWJGL (Lightweight Java Game Library). LWJGL handles all the OpenGL wrapping. You can grab a copy at: http://lwjgl.org/
+It is still based on an older version of Cocos2D for iphone. 
+
+You need the LWJGL (Lightweight Java Game Library)to compile it. LWJGL handles all the OpenGL wrapping. You can grab a copy at: http://lwjgl.org/ 
+
